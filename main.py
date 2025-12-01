@@ -1,14 +1,17 @@
 import random
+import time
 from typing import Dict, TypeVar, Type, List, Callable
 import pygame
 
-from Systems.BoundaryCollisionSystem import boundary_collision_system
-from Systems.PlayerCollisionSystem import player_collision_system
+from callbacks import spawner_callback
+from systems.BoundaryCollisionSystem import boundary_collision_system
+from systems.DespawnSystem import despawn_system
+from systems.PlayerCollisionSystem import player_collision_system
+from systems.TimerSystem import timer_system
 from components import *
-from Systems.MovementSystem import movement_system
-from Systems.TargetSystem import target_system
-from Systems.CollisionSystem import collision_system
-from Systems.PygameRenderSystem import PygameRenderSystem
+from systems.MovementSystem import movement_system
+from systems.TargetSystem import target_system
+from systems.PygameRenderSystem import PygameRenderSystem
 
 C = TypeVar("C")
 SystemFn = Callable[['World', float], None]
@@ -41,6 +44,11 @@ class World:
 
     def build_entity(self) -> EntityBuilder:
         return EntityBuilder(self, self.create_entity())
+
+    def delete_entity(self, eid: EID):
+        self._entities.remove(eid)
+        # Maybe replace this if I make a "get_components_for_entity" thing?
+        [ctype.pop(eid, None) for ctype in self._components.values()]
 
     def add_component(self, eid: EID, component: C):
         entities = self._components.setdefault(type(component), {})
@@ -75,57 +83,60 @@ class World:
         return eid in self.entities_with(ctype)
 
 
-if __name__ == '__main__':
-    world = World()
+def create_waypoint(world: World, x=None, y=None):
+    position = Position(x if x is not None else (random.random() * world.size[0]),
+                        y if y is not None else (random.random() * world.size[1]))
 
-    # Initialize pygame stuff
+    return (world.build_entity()
+            .has(position)
+            .has(Role("target"))
+            .has(BoundaryCollision())
+            ).eid
+
+
+def init_systems(world: World):
+    world.add_system(timer_system)
+    world.add_system(despawn_system)
+
+    world.add_system(target_system)  # Update velocities
+    world.add_system(movement_system)  # Update positions
+
+    world.add_system(boundary_collision_system)
+    world.add_system(player_collision_system)
+
+    # Render last
+    world.add_system(init_pygame(world))
+
+
+def init_pygame(world: World) -> PygameRenderSystem:
     pygame.init()
     screen_size = (800, 800)
     screen = pygame.display.set_mode(screen_size)
-    pygame.display.set_caption("ECS little guys")
-    render_system = PygameRenderSystem(screen, screen_size, world.size)
+    pygame.display.set_caption("Station Sim")
+    return PygameRenderSystem(screen, screen_size, world.size)
 
-    # Create moving target
-    target = (world.build_entity()
-              .has(Position(random.random() * world.size[0],
-                            random.random() * world.size[1]))
-              .has(Velocity(10 * (random.random() - 0.5),
-                            10 * (random.random() - 0.5)))
-              .has(Role("target"))
-              .has(BoundaryCollision())
-              ).eid
 
-    agents = 100
+if __name__ == '__main__':
+    world_x = 20
+    world_y = 20
+    world = World((world_x, world_y))
+    train_1 = create_waypoint(world, world_x / 3, world_y - 1)
+    train_2 = create_waypoint(world, 2 * world_x / 3, world_y - 1)
+    station_1 = create_waypoint(world, 0.0, world_y / 2)
+    station_2 = create_waypoint(world, world_x, world_y / 2)
 
-    # Create commuters
-    for _ in range(agents):
-        (world.build_entity()
-         .has(Position(random.random() * world.size[0],
-                       random.random() * world.size[1]))
-         .has(Velocity(10 * (random.random() - 0.5),
-                       10 * (random.random() - 0.5)))
-         .has(Role())
-         .has(BoundaryCollision())
-         .has(PlayerCollision())
-         .has(Target(target))
-         )
-
-    (world.build_entity()
-     .has(Position(random.random() * world.size[0],
-                   random.random() * world.size[1]))
-     .has(Velocity(10 * (random.random() - 0.5),
-                   10 * (random.random() - 0.5)))
-     )
-
-    # Declare systems
-    world.add_system(target_system)
-    world.add_system(movement_system)
-    world.add_system(boundary_collision_system)
-    world.add_system(player_collision_system)
-    world.add_system(render_system)
-
+    init_systems(world)
     clock = pygame.time.Clock()
     running = True
+
+    (world.build_entity().
+     has(Timer(0.05, 50, time.time(), callback=spawner_callback,
+               callback_args=([station_1, station_2], [train_1, train_2], "commuter"))))
+
+    (world.build_entity().
+     has(Timer(0.05, 50, time.time(), callback=spawner_callback,
+               callback_args=([train_1, train_2], [station_1, station_2], "leaver"))))
+
     while running:
         dt = clock.tick(60) / 1000.0  # seconds
 

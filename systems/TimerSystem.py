@@ -1,9 +1,6 @@
-import dataclasses
 import time
-from random import random
 
-from components import Spawner, Position, Velocity, BoundaryCollision, Role, Timer
-from datetime import datetime
+from components import Timer
 
 
 def timer_system(world: 'World', dt):
@@ -12,7 +9,7 @@ def timer_system(world: 'World', dt):
 
         current_time = time.time()
         if (current_time - timer.last) > timer.interval:
-            timer.callback(world)
+            timer.callback(world, *timer.callback_args)
             timer.last = current_time
             timer.n -= 1
 

@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Callable
+
 
 @dataclass
 class Position:
@@ -19,7 +21,10 @@ class Velocity:
 @dataclass
 class Role:
     name: str = "na"
+
+
 from dataclasses import dataclass
+
 
 @dataclass
 class Goal:
@@ -27,15 +32,32 @@ class Goal:
     y: float
     radius: float = 0.3  # how close counts as "arrived"
 
+
 @dataclass
 class Target:
     eid: 'EID'
-    radius: float = 0.3
+    radius: float = 0.5
+
 
 @dataclass
 class BoundaryCollision:
     pass
 
+
 @dataclass
 class PlayerCollision:
     pass
+
+
+@dataclass
+class Timer:
+    interval: float  # How long to wait between spawns
+    n: int  # How many entities to spawn
+    last: float
+    callback: Callable[['World', ...], None]
+    callback_args: ...
+
+
+@dataclass
+class Despawn:
+    target: Target

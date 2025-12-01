@@ -3,7 +3,10 @@ import pygame
 from components import Position, Role
 
 colors = {"target": (255, 0, 0),
-          "robot": (0, 255, 255)}
+          "robot": (0, 255, 255),
+          "commuter": (0, 200, 200),
+          "leaver": (200, 0, 200)
+          }
 
 
 class PygameRenderSystem:
@@ -43,7 +46,6 @@ class PygameRenderSystem:
             # pick a color; e.g. based on Role if present
             role = world.get_component(eid, Role)
             color = colors.get(role.name, (0, 255, 0))
-            # you could inspect Role here and change color
 
             radius = 8
             pygame.draw.circle(self.screen, color, (px, py), radius)
