@@ -21,7 +21,7 @@ class PygameRenderSystem:
         self.screen.fill((20, 20, 20))
 
         # (optional) draw a faint grid
-        grid_color = (40, 40, 40)
+        grid_color = (180, 180, 180)
         for i in range(self.world_width + 1):
             x = int(i * self.scale_x)
             pygame.draw.line(self.screen, grid_color, (x, 0), (x, self.screen_height))
