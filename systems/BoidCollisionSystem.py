@@ -3,8 +3,9 @@ import math
 from components import Position, Velocity, PlayerCollision
 
 
+from world import World
 
-def boid_collision_system(world: 'World', dt: float):
+def boid_collision_system(world: World, dt: float):
     eids = world.entities_with(Position, Velocity, PlayerCollision)
     n = len(eids)
     avoidradius=1.5

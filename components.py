@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Tuple, Any
 
 
 @dataclass
@@ -36,7 +36,7 @@ class Goal:
 @dataclass
 class Target:
     eid: 'EID'
-    radius: float = 0.5
+    radius: float = 1.0
 
 
 @dataclass
@@ -50,14 +50,56 @@ class PlayerCollision:
 
 
 @dataclass
+class Despawn:
+    target: Target
+
+
+@dataclass
+class Color:
+    color: Tuple[int, int, int] = (255, 255, 255)
+
+
+@dataclass
+class Action:
+    func: Callable[['World', ...], None]
+    args: tuple[Any, ...]
+    kwargs: dict = None
+
+    def __call__(self, world: 'World') -> None:
+        self.kwargs = self.kwargs or {}
+        self.func(world, *self.args, **self.kwargs)
+
+    def __init__(self, func: Callable[..., None], *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+
+@dataclass
+class Condition:
+    func: Callable[['World', ...], bool]
+    args: tuple[Any, ...]
+    kwargs: dict = None
+
+    def __call__(self, world: 'World') -> bool:
+        self.kwargs = self.kwargs or {}
+        return self.func(world, *self.args, **self.kwargs)
+
+    def __init__(self, func: Callable[..., bool], *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+
+@dataclass
 class Timer:
     interval: float  # How long to wait between spawns
     n: int  # How many entities to spawn
     last: float
-    callback: Callable[['World', ...], None]
-    callback_args: ...
+    callbacks: list[Action]
 
 
 @dataclass
-class Despawn:
-    target: Target
+class Trigger:
+    conditions: list[Condition]
+    callbacks: list[Action]

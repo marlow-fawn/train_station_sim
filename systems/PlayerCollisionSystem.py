@@ -1,9 +1,10 @@
 import math
 
 from components import Position, Velocity, PlayerCollision
+from world import World
 
 
-def player_collision_system(world: 'World', dt: float):
+def player_collision_system(world: World, dt: float):
     eids = world.entities_with(Position, Velocity, PlayerCollision)
     n = len(eids)
 

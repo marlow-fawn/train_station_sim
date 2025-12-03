@@ -1,11 +1,12 @@
 import math
 
 from components import Position, Velocity, BoundaryCollision
+from world import World
 
 AGENT_RADIUS = 0.3  # tweak to taste
 
 
-def boundary_collision_system(world: 'World', dt: float):
+def boundary_collision_system(world: World, dt: float):
     width, height = world.size
 
     # --- 1. wall collisions ---

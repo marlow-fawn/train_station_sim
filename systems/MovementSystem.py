@@ -1,7 +1,8 @@
 from components import Position, Velocity
+from world import World
 
 
-def movement_system(world: 'World', dt: float) -> None:
+def movement_system(world: World, dt: float) -> None:
     for eid in world.entities_with(Position, Velocity):
         pos = world.get_component(eid, Position)
         vel = world.get_component(eid, Velocity)

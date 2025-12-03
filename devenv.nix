@@ -1,16 +1,44 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  pythonEnv = pkgs.python312.withPackages (ps: [
-    ps.pygame
-  ]);
+  buildInputs = with pkgs; [
+    stdenv.cc.cc
+    libuv
+    zlib
+    SDL2
+    SDL2_image
+    SDL2_mixer
+    SDL2_ttf
+    wayland
+    xorg.libX11
+    xorg.libXcursor
+    xorg.libXrandr
+    xorg.libXi
+  ];
 in
 {
-  # Put this Python (with pygame) in your shell
-  packages = [
-    pythonEnv
-  ];
+  env = {
+    LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
+  };
 
-  # Optional but nice: make sure `python` is that interpreter
-  env.PYTHON = "${pythonEnv}/bin/python";
+  languages.python = {
+    enable = true;
+    venv = {
+      enable = true;
+    };
+  };
+
+  enterShell = ''
+    . .devenv/state/venv/bin/activate
+
+    # Create a symlink to the Python virtual environment for IDE compatibility
+    if [ ! -L "$DEVENV_ROOT/venv" ]; then
+        ln -s "$DEVENV_STATE/venv/" "$DEVENV_ROOT/venv"
+    fi
+  '';
 }
+

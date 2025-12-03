@@ -1,10 +1,11 @@
 import math
 
+from world import World
 from components import Position, Velocity
 
 AGENT_RADIUS = 0.3  # tweak to taste
 # FIXME: No generic collision component any more
-def collision_system(world: 'World', dt: float):
+def collision_system(world: World, dt: float):
     width, height = world.size
 
     # --- 1. wall collisions ---

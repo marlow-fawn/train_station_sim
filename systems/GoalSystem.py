@@ -1,11 +1,12 @@
 import math
 
 from components import Position, Velocity, Goal
+from world import World
 
 MAX_SPEED = 1.0      # units per second
 MAX_ACCEL = 3.0      # how fast velocity can change toward goal per second
 
-def goal_system(world: 'World', dt: float):
+def goal_system(world: World, dt: float):
     for eid in world.entities_with(Position, Velocity, Goal):
         pos = world.get_component(eid, Position)
         vel = world.get_component(eid, Velocity)
